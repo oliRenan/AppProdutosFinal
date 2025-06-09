@@ -7,6 +7,7 @@ type Props = {
 };
 const CartScreen: React.FC<Props> = ({ cart }) => {
     const total = cart.reduce((sum, item) => sum + parseFloat(item.price), 0);return (
+
         <View style={styles.container}>
             <Text style={styles.title}>Carrinho</Text>
             <FlatList
@@ -23,9 +24,23 @@ const CartScreen: React.FC<Props> = ({ cart }) => {
     );
 };
 export default CartScreen;
+
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20 },
-    title: { fontSize: 24, fontWeight: "bold", marginBottom: 10 },
-    item: { marginBottom: 5 },
-    total: { marginTop: 20, fontSize: 18, fontWeight: "bold" },
+    container: { 
+        flex: 1,
+        padding: 20 
+    },
+    title: { 
+        fontSize: 24,
+        fontWeight: "bold", 
+        marginBottom: 10 
+    },
+    item: { 
+        marginBottom: 5 
+    },
+    total: { 
+        marginTop: 20, 
+        fontSize: 18, 
+        fontWeight: "bold" 
+    },
 });

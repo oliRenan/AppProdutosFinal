@@ -14,6 +14,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 const AppNavigator: React.FC = () => {
 
     const [cart, setCart] = useState<Product[]>([]);
+
     const addToCart = (product: Product) => {
         setCart((prev) => [...prev, product]);
     };

@@ -12,11 +12,13 @@ import {
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { Product } from "../types";
+import { Product } from "../types/types"; 
 import { Ionicons } from "@expo/vector-icons";
+
 type Props = {
     addToCart: (product: Product) => void;
 };
+
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
 const HomeScreen: React.FC<Props> = ({ addToCart }) => {
     const [products, setProducts] = useState<Product[]>([]);
@@ -26,7 +28,7 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
     const navigation = useNavigation<HomeScreenNavigationProp>();
     const fetchProducts = async () => {
         try {
-            const response = await axios.get("https://YOUR_MOCKAPI_URL/products");
+            const response = await axios.get("https://6846d6487dbda7ee7ab08979.mockapi.io/products");
             setProducts(response.data);
         } catch (error) {
             console.error("Erro ao buscar produtos:", error);
@@ -44,7 +46,8 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
             const newProduct = {
                 name: newProductName,
                 price: newProductPrice,
-            };await axios.post("https://YOUR_MOCKAPI_URL/products", newProduct);
+            };
+            await axios.post("https://6846d6487dbda7ee7ab08979.mockapi.io/products", newProduct);
             setNewProductName("");
             setNewProductPrice("");
             setShowForm(false);
