@@ -25,7 +25,9 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
     const [newProductName, setNewProductName] = useState("");
     const [newProductPrice, setNewProductPrice] = useState("");
     const [showForm, setShowForm] = useState(false);
+    const [searchText, setSearchText] = useState("");
     const navigation = useNavigation<HomeScreenNavigationProp>();
+
     const fetchProducts = async () => {
         try {
             const response = await axios.get("https://6846d6487dbda7ee7ab08979.mockapi.io/products");
@@ -59,6 +61,11 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
     const toggleForm = () => {
         setShowForm(!showForm);
     };
+
+    const filteredProducts = products.filter((product) =>
+        String(product.name).toLowerCase().includes(searchText.toLowerCase())
+    );
+
     return (
         <View style={styles.container}>
             {showForm && (
@@ -81,8 +88,14 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
                 </View>
             )}
             <Text style={[styles.title, { marginTop: 20 }]}>Produtos</Text>
+            <TextInput
+                placeholder="Buscar Produto"
+                value={searchText}
+                onChangeText={setSearchText}
+                style={styles.searchInput}
+            />
             <FlatList
-                data={products}
+                data={filteredProducts}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.item}>
@@ -150,5 +163,13 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         justifyContent: "center",
         alignItems: "center",
+    },
+
+    searchInput: {
+        borderWidth: 1,
+        borderColor: "#007bff",
+        padding: 8,
+        borderRadius: 5,
+        marginBottom: 10,
     },
 });
