@@ -10,7 +10,8 @@ import {
     Button,
 } from "react-native";
 import axios from "axios";
-import { useNavigation } from "@react-navigation/native";import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { Product } from "../types/types"; 
 import { Ionicons } from "@expo/vector-icons";
@@ -20,6 +21,7 @@ type Props = {
 };
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
+
 const HomeScreen: React.FC<Props> = ({ addToCart }) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [newProductName, setNewProductName] = useState("");
@@ -98,12 +100,17 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
                 data={filteredProducts}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <View style={styles.item}>
-                        <Text>{item.name}</Text><Text>R$ {item.price}</Text>
-                        <TouchableOpacity onPress={() => addToCart(item)}>
-                            <Ionicons name="cart" size={24} color="green" />
-                        </TouchableOpacity>
-                    </View>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate("DetalhesProduto", { product: item })}
+                    >
+                        <View style={styles.item}>
+                            <Text>{item.name}</Text>
+                            <Text>R$ {item.price}</Text>
+                            <TouchableOpacity onPress={() => addToCart(item)}>
+                                <Ionicons name="cart" size={24} color="green" />
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
                 )}
             />
             <TouchableOpacity

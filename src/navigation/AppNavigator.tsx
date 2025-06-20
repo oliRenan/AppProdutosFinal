@@ -3,12 +3,14 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import HomeScreen from "../screens/HomeScreen";
 import CartScreen from "../screens/CartScreen";
+import ProductDetailsScreen from "../screens/ProductDetailScreen";
 import { Product } from "../types/types";
 import AsyncStorage, { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 
 export type RootStackParamList = {
     Home: undefined;
     Carrinho: undefined;
+    DetalhesProduto: {product: Product}
 };
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -54,8 +56,9 @@ const AppNavigator: React.FC = () => {
                     {(props) => <HomeScreen {...props} addToCart={addToCart} />}
                 </Stack.Screen>
                 <Stack.Screen name="Carrinho">
-                    {(props) => <CartScreen {...props} cart={cart} />}
+                    {(props) => <CartScreen {...props} cart={cart} setCart={setCart}/>}
                 </Stack.Screen>
+                <Stack.Screen name="DetalhesProduto" component={ProductDetailsScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
