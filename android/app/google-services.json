@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "466160400850",
+    "project_id": "produtosapp-c8897",
+    "storage_bucket": "produtosapp-c8897.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:466160400850:android:699cab6623a58fa09a700b",
+        "android_client_info": {
+          "package_name": "br.com.produtoApp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCz8c7K4S-gJMVjJcnSFcNVIoGVNkNZpqY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
