@@ -1,6 +1,9 @@
 import React from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Button } from "react-native";
 import { Product } from "../types/types";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../navigation/AppNavigator";
 
 type Props = {
   cart: Product[];
@@ -8,8 +11,9 @@ type Props = {
 };
 
 const CartScreen: React.FC<Props> = ({ cart, setCart }) => {
-  const total = cart.reduce((sum, item) => sum + parseFloat(item.price), 0);
 
+  const total = cart.reduce((sum, item) => sum + parseFloat(item.price), 0);
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList, "Carrinho">>();
   const handleRemoveItem = (id: string) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== id));
   };
@@ -30,8 +34,8 @@ const CartScreen: React.FC<Props> = ({ cart, setCart }) => {
           </View>
         )}
       />
-
       <Text style={styles.total}>Total: R$ {total.toFixed(2)}</Text>
+      <Button title="Finalizar Compra" onPress={() => navigation.navigate("Checkout")} />
     </View>
   );
 };
