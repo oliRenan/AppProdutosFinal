@@ -20,7 +20,7 @@ const CartScreen: React.FC<Props> = ({ cart, setCart }) => {
     setCart((prevCart) => {
       const index = prevCart.findIndex((item) => item.id === id);
       if (index === -1) return prevCart; 
-      return [...prevCart.slice(0, index), ...prevCart.slice(index + 1)]; 
+      return [...prevCart.slice(0, index), ...prevCart.slice(index + 1)]; // Remove only first instance
     });
   };
 

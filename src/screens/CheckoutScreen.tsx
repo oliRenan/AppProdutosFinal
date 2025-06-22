@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   FlatList,
   Image,
 } from "react-native";
@@ -14,6 +13,38 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { Product } from "../types/types";
 import { Ionicons } from "@expo/vector-icons";
+import * as Animatable from "react-native-animatable";
+
+Animatable.initializeRegistryWithDefinitions({
+  scatterLeft: {
+    0: {
+      opacity: 1,
+      scaleX: 1,
+      translateX: 0,
+      translateY: 0,
+    },
+    1: {
+      opacity: 0,
+      scaleX: 0.5,
+      translateX: -20,
+      translateY: -20,
+    },
+  },
+  scatterRight: {
+    0: {
+      opacity: 1,
+      scaleX: 1,
+      translateX: 0,
+      translateY: 0,
+    },
+    1: {
+      opacity: 0,
+      scaleX: 0.5,
+      translateX: 20,
+      translateY: -20,
+    },
+  },
+});
 
 type Props = {
   cart: Product[];
@@ -27,6 +58,9 @@ const CheckoutScreen: React.FC<Props> = ({ cart, setCart }) => {
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [showSummary, setShowSummary] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const toastRef = useRef<Animatable.View>(null);
+  const toastIconRef = useRef<Animatable.View>(null);
 
   const total = cart.reduce((sum, item) => sum + parseFloat(item.price), 0);
 
@@ -38,17 +72,20 @@ const CheckoutScreen: React.FC<Props> = ({ cart, setCart }) => {
 
   const handleCheckout = () => {
     if (!address.trim() || !paymentMethod) {
-      Alert.alert("Erro", "Por favor, preencha o endereço e selecione uma forma de pagamento.");
+      setToast({ message: "Por favor, preencha o endereço e selecione uma forma de pagamento.", type: "error" });
+      setTimeout(() => setToast(null), 3000);
       return;
     }
 
-    Alert.alert(
-      "Compra Finalizada!",
-      `Endereço: ${address}\nPagamento: ${paymentOptions.find((opt) => opt.id === paymentMethod)?.label}`
-    );
-
-    setCart([]);
-    navigation.navigate("Home");
+    setToast({
+      message: `Compra finalizada!\nEndereço: ${address}\nPagamento: ${paymentOptions.find((opt) => opt.id === paymentMethod)?.label}`,
+      type: "success",
+    });
+    setTimeout(() => {
+      setToast(null);
+      setCart([]);
+      navigation.navigate("Home");
+    }, 2000);
   };
 
   const togglePaymentMethod = (id: string) => {
@@ -119,79 +156,131 @@ const CheckoutScreen: React.FC<Props> = ({ cart, setCart }) => {
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={styles.form}>
-          {/* Progress Indicator */}
-          <View style={styles.progressContainer}>
-            <View style={styles.progressStep}>
-              <View style={styles.progressCircleActive}>
-                <Text style={styles.progressText}>1</Text>
+        <>
+          <View style={styles.form}>
+            {/* Progress Indicator */}
+            <View style={styles.progressContainer}>
+              <View style={styles.progressStep}>
+                <View style={styles.progressCircleActive}>
+                  <Text style={styles.progressText}>1</Text>
+                </View>
+                <Text style={styles.progressLabel}>Carrinho</Text>
               </View>
-              <Text style={styles.progressLabel}>Carrinho</Text>
-            </View>
-            <View style={styles.progressLineActive} />
-            <View style={styles.progressStep}>
-              <View style={styles.progressCircleActive}>
-                <Text style={styles.progressText}>2</Text>
+              <View style={styles.progressLineActive} />
+              <View style={styles.progressStep}>
+                <View style={styles.progressCircleActive}>
+                  <Text style={styles.progressText}>2</Text>
+                </View>
+                <Text style={styles.progressLabel}>Checkout</Text>
               </View>
-              <Text style={styles.progressLabel}>Checkout</Text>
-            </View>
-            <View style={styles.progressLine} />
-            <View style={styles.progressStep}>
-              <View style={styles.progressCircle}>
-                <Text style={styles.progressText}>3</Text>
+              <View style={styles.progressLine} />
+              <View style={styles.progressStep}>
+                <View style={styles.progressCircle}>
+                  <Text style={styles.progressText}>3</Text>
+                </View>
+                <Text style={styles.progressLabel}>Confirmação</Text>
               </View>
-              <Text style={styles.progressLabel}>Confirmação</Text>
             </View>
+
+            {/* Address Input */}
+            <Text style={styles.label}>Endereço de Entrega</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Rua, número, bairro"
+              value={address}
+              onChangeText={setAddress}
+              multiline
+              placeholderTextColor="#888"
+            />
+
+            {/* Payment Methods */}
+            <Text style={[styles.label, { marginTop: 20 }]}>Forma de Pagamento</Text>
+            <FlatList
+              data={paymentOptions}
+              renderItem={renderPaymentOption}
+              keyExtractor={(item) => item.id}
+              style={styles.paymentList}
+            />
+
+            {/* Order Summary */}
+            <TouchableOpacity
+              style={styles.summaryHeader}
+              onPress={() => setShowSummary(!showSummary)}
+            >
+              <Text style={styles.summaryTitle}>Resumo do Pedido</Text>
+              <Ionicons
+                name={showSummary ? "chevron-up" : "chevron-down"}
+                size={24}
+                color="#D00000"
+              />
+            </TouchableOpacity>
+            {showSummary && (
+              <View style={styles.summaryContent}>
+                <FlatList
+                  data={cart}
+                  renderItem={renderCartItem}
+                  keyExtractor={(item) => item.id}
+                  style={styles.summaryList}
+                />
+                <View style={styles.summaryTotal}>
+                  <Text style={styles.totalText}>Total: R$ {total.toFixed(2)}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* Confirm Button */}
+            <TouchableOpacity style={styles.button} onPress={handleCheckout}>
+              <Text style={styles.buttonText}>Confirmar Pedido</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Address Input */}
-          <Text style={styles.label}>Endereço de Entrega</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Rua, número, bairro"
-            value={address}
-            onChangeText={setAddress}
-            multiline
-            placeholderTextColor="#888"
-          />
-
-          <Text style={[styles.label, { marginTop: 20 }]}>Forma de Pagamento</Text>
-          <FlatList
-            data={paymentOptions}
-            renderItem={renderPaymentOption}
-            keyExtractor={(item) => item.id}
-            style={styles.paymentList}
-          />
-
-          <TouchableOpacity
-            style={styles.summaryHeader}
-            onPress={() => setShowSummary(!showSummary)}
-          >
-            <Text style={styles.summaryTitle}>Resumo do Pedido</Text>
-            <Ionicons
-              name={showSummary ? "chevron-up" : "chevron-down"}
-              size={24}
-              color="#D00000"
-            />
-          </TouchableOpacity>
-          {showSummary && (
-            <View style={styles.summaryContent}>
-              <FlatList
-                data={cart}
-                renderItem={renderCartItem}
-                keyExtractor={(item) => item.id}
-                style={styles.summaryList}
-              />
-              <View style={styles.summaryTotal}>
-                <Text style={styles.totalText}>Total: R$ {total.toFixed(2)}</Text>
-              </View>
-            </View>
+          {/* Toast Notification */}
+          {toast && (
+            <Animatable.View
+              ref={toastRef}
+              animation={toast.type === "success" ? "slideInDown" : "bounceInDown"}
+              duration={400}
+              style={[
+                styles.toast,
+                toast.type === "success" ? styles.toastSuccess : styles.toastError,
+              ]}
+            >
+              {toast.type === "success" && (
+                <>
+                  <Animatable.View
+                    animation="scatterLeft"
+                    duration={600}
+                    style={[styles.particle, { left: 10, top: 10 }]}
+                  />
+                  <Animatable.View
+                    animation="scatterRight"
+                    duration={600}
+                    style={[styles.particle, { left: 20, top: 5 }]}
+                  />
+                  <Animatable.View
+                    animation="scatterLeft"
+                    duration={600}
+                    style={[styles.particle, { left: 15, top: 15 }]}
+                  />
+                </>
+              )}
+              <Animatable.View
+                ref={toastIconRef}
+                animation={toast.type === "success" ? "pulse" : "fadeIn"}
+                delay={toast.type === "success" ? 0 : 300}
+                duration={toast.type === "success" ? 200 : 200}
+                style={styles.toastIconContainer}
+              >
+                <Ionicons
+                  name={toast.type === "success" ? "checkmark-circle" : "alert-circle"}
+                  size={24}
+                  color="#fff"
+                />
+              </Animatable.View>
+              <Text style={styles.toastText}>{toast.message}</Text>
+            </Animatable.View>
           )}
-
-          <TouchableOpacity style={styles.button} onPress={handleCheckout}>
-            <Text style={styles.buttonText}>Confirmar Pedido</Text>
-          </TouchableOpacity>
-        </View>
+        </>
       )}
     </View>
   );
@@ -447,5 +536,43 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "700",
+  },
+  toast: {
+    position: "absolute",
+    top: 70,
+    left: "5%",
+    right: "5%",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  toastSuccess: {
+    backgroundColor: "#4CAF50",
+  },
+  toastError: {
+    backgroundColor: "#D00000",
+  },
+  toastIconContainer: {
+    marginRight: 10,
+  },
+  toastText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    flex: 1,
+  },
+  particle: {
+    position: "absolute",
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#fff",
+    opacity: 0.8,
   },
 });
