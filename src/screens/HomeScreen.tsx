@@ -1,21 +1,12 @@
 import React, { useEffect, useState } from "react";
-import {
-    View,
-    Text,
-    FlatList,
-    StyleSheet,
-    TextInput,
-    Alert,
-    TouchableOpacity,
-    Button,
-    Image,
-} from "react-native";
+import { View, Text, FlatList, StyleSheet, TextInput, Alert, TouchableOpacity, Button, Image } from "react-native";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { Product } from "../types/types";
 import { Ionicons } from "@expo/vector-icons";
+import Animated, { FadeInDown, FadeIn, FadeOut } from "react-native-reanimated";
 
 type Props = {
     addToCart: (product: Product) => void;
@@ -78,7 +69,11 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
     return (
         <View style={styles.container}>
             {showForm && (
-                <View style={styles.formContainer}>
+                <Animated.View
+                    entering={FadeInDown.duration(300)}
+                    exiting={FadeOut.duration(300)}
+                    style={styles.formContainer}
+                >
                     <Text style={styles.title}>Cadastrar Produto</Text>
                     <TextInput
                         placeholder="Nome do produto"
@@ -99,26 +94,32 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
                         onChangeText={setNewProductImage}
                         style={styles.input}
                     />
-                    <Button color="#EA1D2C" title="Cadastrar Produto" onPress={handleAddProduct} />
-                </View>
+                    <TouchableOpacity style={styles.submitButton} onPress={handleAddProduct}>
+                        <Text style={styles.submitButtonText}>Cadastrar Produto</Text>
+                    </TouchableOpacity>
+                </Animated.View>
             )}
 
             <Text style={[styles.title, { marginTop: 20 }]}>Produtos</Text>
-            <TextInput
-                placeholder="Buscar Produto"
-                value={searchText}
-                onChangeText={setSearchText}
-                style={styles.searchInput}
-            />
+            <Animated.View entering={FadeIn.duration(300)} style={styles.searchContainer}>
+                <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+                <TextInput
+                    placeholder="Buscar Produto"
+                    value={searchText}
+                    onChangeText={setSearchText}
+                    style={styles.searchInput}
+                />
+            </Animated.View>
 
             <FlatList
                 data={filteredProducts}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate("DetalhesProduto", { product: item })}
-                    >
-                        <View style={styles.productCard}>
+                renderItem={({ item, index }) => (
+                    <Animated.View entering={FadeInDown.duration(300).delay(index * 100)}>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate("DetalhesProduto", { product: item })}
+                            style={styles.productCard}
+                        >
                             {item.image ? (
                                 <Image source={{ uri: item.image }} style={styles.productImage} />
                             ) : (
@@ -130,24 +131,29 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
                                 <Text style={styles.productName}>{item.name}</Text>
                                 <Text style={styles.productPrice}>R$ {item.price}</Text>
                             </View>
-                            <TouchableOpacity onPress={() => addToCart(item)}>
-                                <Ionicons name="cart" size={24} color="#EA1D2C" />
+                            <TouchableOpacity
+                                style={styles.addToCartButton}
+                                onPress={() => addToCart(item)}
+                            >
+                                <Ionicons name="cart" size={24} color="#fff" />
                             </TouchableOpacity>
-                        </View>
-                    </TouchableOpacity>
+                        </TouchableOpacity>
+                    </Animated.View>
                 )}
+                showsVerticalScrollIndicator={false}
             />
 
-            <TouchableOpacity
-                style={styles.cartIcon}
-                onPress={() => navigation.navigate("Carrinho")}
-            >
-                <Ionicons name="cart" size={30} color="white" />
-            </TouchableOpacity>
+            <Animated.View entering={FadeIn.duration(300)} style={styles.cartIcon}>
+                <TouchableOpacity onPress={() => navigation.navigate("Carrinho")}>
+                    <Ionicons name="cart" size={30} color="#fff" />
+                </TouchableOpacity>
+            </Animated.View>
 
-            <TouchableOpacity style={styles.fab} onPress={toggleForm}>
-                <Ionicons name={showForm ? "close" : "add"} size={30} color="white" />
-            </TouchableOpacity>
+            <Animated.View entering={FadeIn.duration(300)} style={styles.fab}>
+                <TouchableOpacity onPress={toggleForm}>
+                    <Ionicons name={showForm ? "close" : "add"} size={30} color="#fff" />
+                </TouchableOpacity>
+            </Animated.View>
         </View>
     );
 };
@@ -155,50 +161,100 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: "#ffffff" },
-    title: { fontSize: 22, fontWeight: "bold", color: "#EA1D2C", marginBottom: 10 },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        padding: 10,
-        marginBottom: 10,
-        borderRadius: 8,
-        backgroundColor: "#fff",
+    container: {
+        flex: 1,
+        padding: 16,
+        backgroundColor: "#f8fafc",
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: "600",
+        color: "#1f2937",
+        marginBottom: 12,
+        fontFamily: "System",
     },
     formContainer: {
-        backgroundColor: "#fcebec",
-        padding: 15,
+        backgroundColor: "#ffffff",
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 16,
+        elevation: 4,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+    },
+    input: {
+        backgroundColor: "#f1f5f9",
+        padding: 12,
         borderRadius: 8,
-        marginBottom: 20,
+        marginBottom: 12,
+        fontSize: 16,
+        color: "#1f2937",
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
+    },
+    submitButton: {
+        backgroundColor: "#dc2626",
+        padding: 12,
+        borderRadius: 8,
+        alignItems: "center",
+    },
+    submitButtonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600",
+    },
+    searchContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#ffffff",
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        padding: 12,
+        fontSize: 16,
+        color: "#1f2937",
     },
     productCard: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#fff",
-        padding: 12,
-        borderRadius: 10,
-        marginBottom: 10,
-        borderColor: "#f2f2f2",
-        borderWidth: 1,
-        elevation: 3,
+        backgroundColor: "#ffffff",
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 12,
+        elevation: 4,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 2,
+        shadowRadius: 8,
     },
     productImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 10,
-        marginRight: 10,
-        backgroundColor: "#f2f2f2",
+        width: 60,
+        height: 60,
+        borderRadius: 12,
+        marginRight: 12,
+        backgroundColor: "#f1f5f9",
     },
     imagePlaceholder: {
-        width: 50,
-        height: 50,
-        borderRadius: 10,
-        marginRight: 10,
-        backgroundColor: "#f2f2f2",
+        width: 60,
+        height: 60,
+        borderRadius: 12,
+        marginRight: 12,
+        backgroundColor: "#f1f5f9",
         justifyContent: "center",
         alignItems: "center",
     },
@@ -206,52 +262,53 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     productName: {
-        fontWeight: "bold",
         fontSize: 16,
-        color: "#333",
+        fontWeight: "600",
+        color: "#1f2937",
+        marginBottom: 4,
     },
     productPrice: {
-        color: "#EA1D2C",
         fontSize: 14,
+        color: "#dc2626",
+        fontWeight: "500",
+    },
+    addToCartButton: {
+        backgroundColor: "#dc2626",
+        padding: 8,
+        borderRadius: 8,
+        justifyContent: "center",
+        alignItems: "center",
     },
     fab: {
         position: "absolute",
-        right: 20,
-        bottom: 100,
-        backgroundColor: "#EA1D2C",
-        width: 60,
-        height: 60,
-        borderRadius: 30,
+        right: 16,
+        bottom: 96,
+        backgroundColor: "#dc2626",
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         justifyContent: "center",
         alignItems: "center",
+        elevation: 6,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 5,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
     },
     cartIcon: {
         position: "absolute",
-        right: 20,
-        bottom: 20,
-        backgroundColor: "#EA1D2C",
-        width: 60,
-        height: 60,
-        borderRadius: 30,
+        right: 16,
+        bottom: 24,
+        backgroundColor: "#dc2626",
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         justifyContent: "center",
         alignItems: "center",
+        elevation: 6,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    searchInput: {
-        borderWidth: 1,
-        borderColor: "#EA1D2C",
-        padding: 10,
-        borderRadius: 8,
-        marginBottom: 10,
-        backgroundColor: "#fff",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
     },
 });

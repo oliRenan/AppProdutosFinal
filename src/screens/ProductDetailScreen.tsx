@@ -4,29 +4,57 @@ import { RouteProp, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { Product } from "../types/types";
 
 type Props = {
   route: RouteProp<RootStackParamList, "DetalhesProduto">;
+  cart: Product[];
+  setCart: React.Dispatch<React.SetStateAction<Product[]>>;
 };
 
-const ProductDetailsScreen: React.FC<Props> = ({ route }) => {
+const ProductDetailsScreen: React.FC<Props> = ({ route, cart, setCart }) => {
   const { product } = route.params;
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
+  const handleAddToCart = () => {
+    setCart((prevCart) => [...prevCart, product]);
+    navigation.navigate("Carrinho");
+  };
+
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#D00000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{product.name}</Text>
+      </View>
 
+      {/* Product Image */}
       {product.image ? (
-        <Image source={{ uri: product.image}} style={styles.image} />
+        <Image source={{ uri: product.image }} style={styles.image} />
       ) : (
         <View style={styles.imagePlaceholder}>
-          <Text style={styles.placeholderText}>Sem imagem</Text>
+          <Text style={styles.imagePlaceholderText}>Sem Imagem</Text>
         </View>
       )}
 
-      <Text style={styles.title}>{product.name}</Text>
-      <Text style={styles.price}>R$ {product.price}</Text>
-      <Text style={styles.description}>Produto delicioso, feito com carinho! (mock)</Text>
+      {/* Product Details */}
+      <View style={styles.detailsContainer}>
+        <Text style={styles.title}>{product.name}</Text>
+        <Text style={styles.price}>R$ {product.price}</Text>
+        <Text style={styles.description}>
+          Produto delicioso, feito com carinho! (mock)
+        </Text>
+      </View>
+
+      {/* Add to Cart Button */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
+          <Text style={styles.addToCartButtonText}>Adicionar ao Carrinho</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -57,35 +85,54 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 250,
     resizeMode: "cover",
+    backgroundColor: "#f9f9f9",
   },
   imagePlaceholder: {
     width: "100%",
     height: 250,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#eee",
     justifyContent: "center",
     alignItems: "center",
   },
-  placeholderText: {
+  imagePlaceholderText: {
+    fontSize: 16,
     color: "#999",
+    textAlign: "center",
+  },
+  detailsContainer: {
+    padding: 20,
+    flex: 1,
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
-    marginTop: 20,
-    marginHorizontal: 20,
+    fontWeight: "600",
     color: "#333",
   },
   price: {
     fontSize: 18,
-    marginTop: 5,
-    marginHorizontal: 20,
-    color: "#D00000",
     fontWeight: "600",
+    color: "#D00000",
+    marginTop: 5,
   },
   description: {
     fontSize: 16,
-    marginTop: 10,
-    marginHorizontal: 20,
     color: "#666",
+    marginTop: 10,
+  },
+  buttonContainer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+  },
+  addToCartButton: {
+    backgroundColor: "#D00000",
+    paddingVertical: 12,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  addToCartButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });

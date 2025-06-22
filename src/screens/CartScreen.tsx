@@ -17,20 +17,38 @@ const CartScreen: React.FC<Props> = ({ cart, setCart }) => {
   const total = cart.reduce((sum, item) => sum + parseFloat(item.price), 0);
 
   const handleRemoveItem = (id: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+    setCart((prevCart) => {
+      const index = prevCart.findIndex((item) => item.id === id);
+      if (index === -1) return prevCart; 
+      return [...prevCart.slice(0, index), ...prevCart.slice(index + 1)]; 
+    });
   };
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#D00000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Carrinho</Text>
+      </View>
+
       {cart.length === 0 ? (
         <View style={styles.emptyContainer}>
+          <Ionicons name="cart-outline" size={80} color="#888" />
           <Text style={styles.emptyText}>Seu carrinho está vazio!</Text>
+          <TouchableOpacity
+            style={styles.shopButton}
+            onPress={() => navigation.navigate("Home")}
+          >
+            <Text style={styles.shopButtonText}>Continuar Comprando</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <>
           <FlatList
             data={cart}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item, index) => `${item.id}-${index}`} // Unique key for duplicates
             renderItem={({ item }) => (
               <View style={styles.item}>
                 {item.image ? (
@@ -43,7 +61,7 @@ const CartScreen: React.FC<Props> = ({ cart, setCart }) => {
 
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemName}>{item.name}</Text>
-                  <Text style={styles.itemPrice}>R$ {item.price}</Text>
+                  <Text style={styles.itemPrice}>R$ {parseFloat(item.price).toFixed(2)}</Text>
                 </View>
 
                 <TouchableOpacity onPress={() => handleRemoveItem(item.id)}>
@@ -51,11 +69,11 @@ const CartScreen: React.FC<Props> = ({ cart, setCart }) => {
                 </TouchableOpacity>
               </View>
             )}
+            contentContainerStyle={styles.listContent}
           />
 
           <View style={styles.totalContainer}>
             <Text style={styles.totalText}>Total: R$ {total.toFixed(2)}</Text>
-
             <TouchableOpacity
               style={styles.checkoutButton}
               onPress={() => navigation.navigate("Checkout")}
@@ -95,37 +113,60 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    padding: 20,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#888",
+    marginTop: 10,
+    textAlign: "center",
+  },
+  shopButton: {
+    backgroundColor: "#D00000",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  shopButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  listContent: {
+    paddingBottom: 20,
   },
   item: {
     flexDirection: "row",
     alignItems: "center",
     marginHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
   itemImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 5,
-    marginRight: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 15,
     backgroundColor: "#f9f9f9",
   },
   imagePlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 5,
-    marginRight: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 15,
     backgroundColor: "#eee",
     justifyContent: "center",
     alignItems: "center",
   },
   imagePlaceholderText: {
-    fontSize: 10,
+    fontSize: 12,
     color: "#999",
     textAlign: "center",
   },
@@ -140,24 +181,36 @@ const styles = StyleSheet.create({
   itemPrice: {
     fontSize: 14,
     color: "#D00000",
-    marginTop: 2,
+    marginTop: 4,
+    fontWeight: "600",
   },
   totalContainer: {
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: "#eee",
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   totalText: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 15,
     color: "#333",
   },
   checkoutButton: {
     backgroundColor: "#D00000",
     paddingVertical: 12,
-    borderRadius: 5,
+    borderRadius: 8,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
   checkoutButtonText: {
     color: "#fff",
