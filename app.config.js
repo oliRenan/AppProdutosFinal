@@ -1,3 +1,4 @@
+
 export default ({ config }) => {
   return {
     ...config,
@@ -6,7 +7,9 @@ export default ({ config }) => {
     version: "1.0.0",
     android: {
       ...config.android,
+      package: "br.com.produtoApp", 
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
     },
   };
 };
+
