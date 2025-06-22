@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet, TextInput, Alert, TouchableOpacity, Button, Image } from "react-native";
+import { View, Text, FlatList, StyleSheet, TextInput, Alert, TouchableOpacity, Image, RefreshControl } from "react-native";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -7,6 +7,8 @@ import { RootStackParamList } from "../navigation/AppNavigator";
 import { Product } from "../types/types";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn, FadeOut } from "react-native-reanimated";
+import * as Yup from "yup"; 
+import { TextInputMask } from "react-native-masked-text"; 
 
 type Props = {
     addToCart: (product: Product) => void;
@@ -14,13 +16,31 @@ type Props = {
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
 
+const validationSchema = Yup.object().shape({
+    name: Yup.string()
+        .min(3, "O nome deve ter pelo menos 3 caracteres")
+        .required("O nome é obrigatório"),
+    price: Yup.number()
+        .positive("O preço deve ser um número positivo")
+        .required("O preço é obrigatório"),
+    image: Yup.string()
+        .url("A URL da imagem deve ser válida")
+        .required("A URL da imagem é obrigatória"),
+    description: Yup.string()
+        .min(10, "A descrição deve ter pelo menos 10 caracteres")
+        .required("A descrição é obrigatória"),
+});
+
 const HomeScreen: React.FC<Props> = ({ addToCart }) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [newProductName, setNewProductName] = useState("");
     const [newProductPrice, setNewProductPrice] = useState("");
     const [newProductImage, setNewProductImage] = useState("");
+    const [newProductDescription, setNewProductDescription] = useState(""); 
     const [showForm, setShowForm] = useState(false);
     const [searchText, setSearchText] = useState("");
+    const [refreshing, setRefreshing] = useState(false); 
+    const [errors, setErrors] = useState<{ [key: string]: string }>({}); 
     const navigation = useNavigation<HomeScreenNavigationProp>();
 
     const fetchProducts = async () => {
@@ -29,6 +49,8 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
             setProducts(response.data);
         } catch (error) {
             console.error("Erro ao buscar produtos:", error);
+        } finally {
+            setRefreshing(false); 
         }
     };
 
@@ -37,34 +59,56 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
     }, []);
 
     const handleAddProduct = async () => {
-        if (!newProductName || !newProductPrice || !newProductImage) {
-            Alert.alert("Preencha todos os campos!");
-            return;
-        }
         try {
-            const newProduct = {
+            const unmaskedPrice = newProductPrice.replace(/[^0-9,]/g, "").replace(",", ".");
+            const productData = {
                 name: newProductName,
-                price: newProductPrice,
+                price: parseFloat(unmaskedPrice),
                 image: newProductImage,
+                description: newProductDescription, 
             };
-            await axios.post("https://6846d6487dbda7ee7ab08979.mockapi.io/products", newProduct);
+
+            await validationSchema.validate(productData, { abortEarly: false });
+            setErrors({}); 
+
+            await axios.post("https://6846d6487dbda7ee7ab08979.mockapi.io/products", {
+                ...productData,
+                price: unmaskedPrice, 
+            });
             setNewProductName("");
             setNewProductPrice("");
             setNewProductImage("");
+            setNewProductDescription(""); 
             setShowForm(false);
             fetchProducts();
         } catch (error) {
-            console.error("Erro ao cadastrar produto:", error);
+            if (error instanceof Yup.ValidationError) {
+                const errorMessages: { [key: string]: string } = {};
+                error.inner.forEach((err) => {
+                    if (err.path) errorMessages[err.path] = err.message;
+                });
+                setErrors(errorMessages);
+                Alert.alert("Erro de validação", "Por favor, corrija os campos destacados.");
+            } else {
+                console.error("Erro ao cadastrar produto:", error);
+                Alert.alert("Erro", "Não foi possível cadastrar o produto.");
+            }
         }
     };
 
     const toggleForm = () => {
         setShowForm(!showForm);
+        setErrors({}); 
     };
 
     const filteredProducts = products.filter((product) =>
         String(product.name).toLowerCase().includes(searchText.toLowerCase())
     );
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchProducts();
+    };
 
     return (
         <View style={styles.container}>
@@ -79,21 +123,44 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
                         placeholder="Nome do produto"
                         value={newProductName}
                         onChangeText={setNewProductName}
-                        style={styles.input}
+                        style={[styles.input, errors.name && styles.inputError]}
                     />
-                    <TextInput
+                    {errors.name && <Text style={styles.errorText}>{errors.name}</Text>} 
+
+                    <TextInputMask
+                        type={"money"}
+                        options={{
+                            precision: 2,
+                            separator: ",",
+                            delimiter: ".",
+                            unit: "R$ ",
+                            suffixUnit: "",
+                        }}
                         placeholder="Preço"
                         value={newProductPrice}
                         onChangeText={setNewProductPrice}
                         keyboardType="numeric"
-                        style={styles.input}
+                        style={[styles.input, errors.price && styles.inputError]}
                     />
+                    {errors.price && <Text style={styles.errorText}>{errors.price}</Text>} 
+
                     <TextInput
                         placeholder="URL da imagem"
                         value={newProductImage}
                         onChangeText={setNewProductImage}
-                        style={styles.input}
+                        style={[styles.input, errors.image && styles.inputError]}
                     />
+                    {errors.image && <Text style={styles.errorText}>{errors.image}</Text>} 
+
+                    <TextInput
+                        placeholder="Descrição do produto"
+                        value={newProductDescription}
+                        onChangeText={setNewProductDescription}
+                        style={[styles.input, errors.description && styles.inputError, { height: 80 }]}
+                        multiline
+                    />
+                    {errors.description && <Text style={styles.errorText}>{errors.description}</Text>} 
+
                     <TouchableOpacity style={styles.submitButton} onPress={handleAddProduct}>
                         <Text style={styles.submitButtonText}>Cadastrar Produto</Text>
                     </TouchableOpacity>
@@ -141,6 +208,14 @@ const HomeScreen: React.FC<Props> = ({ addToCart }) => {
                     </Animated.View>
                 )}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={["#dc2626"]}
+                        tintColor="#dc2626"
+                    />
+                }
             />
 
             <Animated.View entering={FadeIn.duration(300)} style={styles.cartIcon}>
@@ -193,6 +268,14 @@ const styles = StyleSheet.create({
         color: "#1f2937",
         borderWidth: 1,
         borderColor: "#e5e7eb",
+    },
+    inputError: { // NEW: Style for invalid inputs
+        borderColor: "#dc2626",
+    },
+    errorText: { // NEW: Style for error messages
+        color: "#dc2626",
+        fontSize: 12,
+        marginBottom: 8,
     },
     submitButton: {
         backgroundColor: "#dc2626",

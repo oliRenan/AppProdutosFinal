@@ -23,7 +23,6 @@ const ProductDetailsScreen: React.FC<Props> = ({ route, cart, setCart }) => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#D00000" />
@@ -31,7 +30,6 @@ const ProductDetailsScreen: React.FC<Props> = ({ route, cart, setCart }) => {
         <Text style={styles.headerTitle}>{product.name}</Text>
       </View>
 
-      {/* Product Image */}
       {product.image ? (
         <Image source={{ uri: product.image }} style={styles.image} />
       ) : (
@@ -40,16 +38,14 @@ const ProductDetailsScreen: React.FC<Props> = ({ route, cart, setCart }) => {
         </View>
       )}
 
-      {/* Product Details */}
       <View style={styles.detailsContainer}>
         <Text style={styles.title}>{product.name}</Text>
         <Text style={styles.price}>R$ {product.price}</Text>
         <Text style={styles.description}>
-          Produto delicioso, feito com carinho! (mock)
+          {product.description}
         </Text>
       </View>
 
-      {/* Add to Cart Button */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
           <Text style={styles.addToCartButtonText}>Adicionar ao Carrinho</Text>
